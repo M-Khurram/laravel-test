@@ -90,6 +90,7 @@
                                
                                // Clear the form fields
                                $('#productForm').trigger('reset').removeData('id');
+                               updateTotalValue(); // Update total value after editing
                            }
                        });
                    } else {
@@ -113,7 +114,7 @@
                                        </td>
                                    </tr>
                                `);
-                               updateTotalValue();
+                               updateTotalValue(); // Update total value after adding
 
                                // Clear the form fields
                                $('#productForm').trigger('reset');
@@ -137,16 +138,30 @@
                    $('#productForm').data('id', productId); // Store the product ID for updating
                });
 
+               // Delete button click event
+               $(document).on('click', '.delete-btn', function() {
+                   const row = $(this).closest('tr');
+                   const productId = row.data('id');
+
+                   $.ajax({
+                       type: 'DELETE',
+                       url: '/products/' + productId,
+                       success: function(response) {
+                           // Remove the row from the table
+                           row.remove();
+                           updateTotalValue(); // Update total value after deletion
+                       }
+                   });
+               });
+
                function updateTotalValue() {
                    let total = 0;
                    $('#productTable tr').each(function() {
                        const value = $(this).find('td:nth-child(5)').text();
                        total += parseFloat(value) || 0;
                    });
-                   $('#totalValue').text(total);
+                   $('#totalValue').text(total); // Update the total value in the last row
                }
-
-               // Add delete functionality here
            });
        </script>
    </body>
