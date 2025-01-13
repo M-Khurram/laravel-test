@@ -71,31 +71,70 @@
            $(document).ready(function() {
                $('#productForm').on('submit', function(e) {
                    e.preventDefault();
-                   $.ajax({
-                       type: 'POST',
-                       url: '/products',
-                       data: $(this).serialize(),
-                       success: function(product) {
-                           // Append new product to table
-                           $('#productTable').prepend(`
-                               <tr data-id="${product.id}">
-                                   <td>${product.product_name}</td>
-                                   <td>${product.quantity_in_stock}</td>
-                                   <td>${product.price_per_item}</td>
-                                   <td>${product.created_at}</td>
-                                   <td>${product.quantity_in_stock * product.price_per_item}</td>
-                                   <td>
-                                       <button class="btn btn-warning edit-btn">Edit</button>
-                                       <button class="btn btn-danger delete-btn">Delete</button>
-                                   </td>
-                               </tr>
-                           `);
-                           updateTotalValue();
+                   const formData = $(this).serialize();
+                   const productId = $(this).data('id'); // Get the product ID if editing
 
-                           // Clear the form fields
-                           $('#productForm').trigger('reset');
-                       }
-                   });
+                   if (productId) {
+                       // Update existing product
+                       $.ajax({
+                           type: 'PUT',
+                           url: '/products/' + productId,
+                           data: formData,
+                           success: function(product) {
+                               // Update the product row in the table
+                               const row = $('#productTable').find(`tr[data-id="${product.id}"]`);
+                               row.find('td:nth-child(1)').text(product.product_name);
+                               row.find('td:nth-child(2)').text(product.quantity_in_stock);
+                               row.find('td:nth-child(3)').text(product.price_per_item);
+                               row.find('td:nth-child(5)').text(product.quantity_in_stock * product.price_per_item);
+                               
+                               // Clear the form fields
+                               $('#productForm').trigger('reset').removeData('id');
+                           }
+                       });
+                   } else {
+                       // Create new product
+                       $.ajax({
+                           type: 'POST',
+                           url: '/products',
+                           data: formData,
+                           success: function(product) {
+                               // Append new product to table
+                               $('#productTable').prepend(`
+                                   <tr data-id="${product.id}">
+                                       <td>${product.product_name}</td>
+                                       <td>${product.quantity_in_stock}</td>
+                                       <td>${product.price_per_item}</td>
+                                       <td>${product.created_at}</td>
+                                       <td>${product.quantity_in_stock * product.price_per_item}</td>
+                                       <td>
+                                           <button class="btn btn-warning edit-btn">Edit</button>
+                                           <button class="btn btn-danger delete-btn">Delete</button>
+                                       </td>
+                                   </tr>
+                               `);
+                               updateTotalValue();
+
+                               // Clear the form fields
+                               $('#productForm').trigger('reset');
+                           }
+                       });
+                   }
+               });
+
+               // Edit button click event
+               $(document).on('click', '.edit-btn', function() {
+                   const row = $(this).closest('tr');
+                   const productId = row.data('id');
+                   const productName = row.find('td:nth-child(1)').text();
+                   const quantityInStock = row.find('td:nth-child(2)').text();
+                   const pricePerItem = row.find('td:nth-child(3)').text();
+
+                   // Populate the form with the existing data
+                   $('#product_name').val(productName);
+                   $('#quantity_in_stock').val(quantityInStock);
+                   $('#price_per_item').val(pricePerItem);
+                   $('#productForm').data('id', productId); // Store the product ID for updating
                });
 
                function updateTotalValue() {
@@ -107,7 +146,7 @@
                    $('#totalValue').text(total);
                }
 
-               // Add edit and delete functionality here
+               // Add delete functionality here
            });
        </script>
    </body>
